@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import screens.WikipediaScreen;
 
 import static io.qameta.allure.SeverityLevel.CRITICAL;
+import static io.qameta.allure.SeverityLevel.NORMAL;
 
 @Epic("Mobile")
 @Feature("Wikipedia Android")
@@ -26,5 +27,28 @@ public class WikipediaTests extends TestBase {
                 .openSearch()
                 .searchFor("BrowserStack")
                 .checkSearchResults();
+    }
+
+    @Test
+    @Severity(CRITICAL)
+    @DisplayName("Открытие статьи из результатов поиска")
+    void openArticleTest() {
+        new WikipediaScreen(driver)
+                .skipOnboardingIfVisible()
+                .openSearch()
+                .searchFor("Appium")
+                .checkSearchResults()
+                .openFirstSearchResult()
+                .checkArticleOpened();
+    }
+
+    @Test
+    @Severity(NORMAL)
+    @DisplayName("Открытие экрана поиска Wikipedia")
+    void searchScreenShouldBeOpenedTest() {
+        new WikipediaScreen(driver)
+                .skipOnboardingIfVisible()
+                .openSearch()
+                .checkSearchOpened();
     }
 }

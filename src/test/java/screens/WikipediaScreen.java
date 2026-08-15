@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class WikipediaScreen {
 
@@ -50,6 +51,24 @@ public class WikipediaScreen {
         return this;
     }
 
+    @Step("Проверить открытие экрана поиска")
+    public WikipediaScreen checkSearchOpened() {
+        WebElement searchInput = wait.until(
+                ExpectedConditions.visibilityOfElementLocated(
+                        AppiumBy.id(
+                                "org.wikipedia.alpha:id/search_src_text"
+                        )
+                )
+        );
+
+        assertTrue(
+                searchInput.isDisplayed(),
+                "Поле поиска должно отображаться"
+        );
+
+        return this;
+    }
+
     @Step("Выполнить поиск: {text}")
     public WikipediaScreen searchFor(String text) {
         WebElement searchInput = wait.until(
@@ -69,13 +88,48 @@ public class WikipediaScreen {
     public WikipediaScreen checkSearchResults() {
         List<WebElement> results = wait.until(
                 ExpectedConditions.presenceOfAllElementsLocatedBy(
-                        AppiumBy.className("android.widget.TextView")
+                        AppiumBy.id(
+                                "org.wikipedia.alpha:id/page_list_item_title"
+                        )
                 )
         );
 
         assertFalse(
                 results.isEmpty(),
                 "Список результатов поиска не должен быть пустым"
+        );
+
+        return this;
+    }
+
+    @Step("Открыть первую статью из результатов поиска")
+    public WikipediaScreen openFirstSearchResult() {
+        List<WebElement> results = wait.until(
+                ExpectedConditions.presenceOfAllElementsLocatedBy(
+                        AppiumBy.id(
+                                "org.wikipedia.alpha:id/page_list_item_title"
+                        )
+                )
+        );
+
+        results.get(0).click();
+
+        return this;
+    }
+
+    @Step("Проверить, что статья открылась")
+    public WikipediaScreen checkArticleOpened() {
+        boolean articleOpened = wait.until(driver -> {
+            String source = driver.getPageSource();
+
+            return source.contains("Save")
+                    || source.contains("Language")
+                    || source.contains("Contents");
+        });
+
+        assertTrue(
+                articleOpened,
+                "Экран статьи должен отображаться"
         );
 
         return this;
