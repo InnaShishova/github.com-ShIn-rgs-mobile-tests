@@ -1,0 +1,57 @@
+plugins {
+    id 'java'
+    id 'io.qameta.allure' version '2.12.0'
+}
+
+repositories {
+    mavenCentral()
+}
+
+def allureVersion = '2.35.3'
+def appiumVersion = '9.5.0'
+def ownerVersion = '1.0.12'
+
+dependencies {
+    // JUnit 5
+    testImplementation platform('org.junit:junit-bom:5.13.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+
+    // Appium
+    testImplementation "io.appium:java-client:$appiumVersion"
+
+    // Owner
+    testImplementation "org.aeonbits.owner:owner:$ownerVersion"
+
+    // Allure
+    testImplementation platform("io.qameta.allure:allure-bom:$allureVersion")
+    testImplementation 'io.qameta.allure:allure-junit5'
+}
+
+test {
+    useJUnitPlatform()
+
+    systemProperties(System.getProperties())
+}
+
+allure {
+    version = allureVersion
+
+    adapter {
+        aspectjWeaver.set(true)
+
+        frameworks {
+            junit5 {
+                adapterVersion.set(allureVersion)
+            }
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.withType(Test).configureEach {
+    systemProperty 'file.encoding', 'UTF-8'
+}
