@@ -35,6 +35,29 @@ public class BrowserstackDriver {
             );
         }
 
+        /*
+         * В Jenkins приложение будет загружаться в BrowserStack
+         * перед запуском тестов.
+         *
+         * Jenkins передаст полученный bs://... через
+         * переменную BROWSERSTACK_APP_URL.
+         *
+         * При локальном запуске этой переменной нет,
+         * поэтому используется app из browserstack.properties.
+         */
+        String appUrl =
+                System.getenv("BROWSERSTACK_APP_URL");
+
+        if (appUrl == null || appUrl.isBlank()) {
+            appUrl = config.app();
+        }
+
+        if (appUrl == null || appUrl.isBlank()) {
+            throw new IllegalStateException(
+                    "BrowserStack app URL is not set"
+            );
+        }
+
         MutableCapabilities capabilities =
                 new MutableCapabilities();
 
@@ -66,11 +89,6 @@ public class BrowserstackDriver {
                 "Wikipedia Android Test"
         );
 
-        /*
-         * BrowserStack device selection.
-         * Оставляем здесь, потому что такая схема
-         * у нас уже успешно создавала Pixel 7 / Android 13.
-         */
         bstackOptions.put(
                 "deviceName",
                 config.device()
@@ -86,13 +104,11 @@ public class BrowserstackDriver {
                 bstackOptions
         );
 
-        // Стандартная W3C capability
         capabilities.setCapability(
                 "platformName",
                 "Android"
         );
 
-        // Appium W3C capabilities
         capabilities.setCapability(
                 "appium:automationName",
                 "UiAutomator2"
@@ -100,7 +116,7 @@ public class BrowserstackDriver {
 
         capabilities.setCapability(
                 "appium:app",
-                config.app()
+                appUrl
         );
 
         try {
