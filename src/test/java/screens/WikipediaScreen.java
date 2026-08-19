@@ -1,8 +1,9 @@
 package screens;
 
-import io.appium.java_client.AppiumBy;
 import io.appium.java_client.android.AndroidDriver;
 import io.qameta.allure.Step;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -18,35 +19,49 @@ public class WikipediaScreen {
     private final AndroidDriver driver;
     private final WebDriverWait wait;
 
+    private final By skipButton =
+            By.id("org.wikipedia.alpha:id/fragment_onboarding_skip_button");
+
+    private final By searchButton =
+            By.xpath("//*[@content-desc='Search Wikipedia']");
+
+    private final By searchInput =
+            By.id("org.wikipedia.alpha:id/search_src_text");
+
+    private final By searchResultTitles =
+            By.id("org.wikipedia.alpha:id/page_list_item_title");
+
+
     public WikipediaScreen(AndroidDriver driver) {
         this.driver = driver;
-        this.wait = new WebDriverWait(driver, Duration.ofSeconds(30));
+        this.wait = new WebDriverWait(
+                driver,
+                Duration.ofSeconds(30)
+        );
     }
+
 
     @Step("Пропустить onboarding, если он отображается")
     public WikipediaScreen skipOnboardingIfVisible() {
         try {
-            WebElement skipButton = driver.findElement(
-                    AppiumBy.id(
-                            "org.wikipedia.alpha:id/fragment_onboarding_skip_button"
-                    )
-            );
+            WebElement button = driver.findElement(skipButton);
 
-            if (skipButton.isDisplayed()) {
-                skipButton.click();
+            if (button.isDisplayed()) {
+                button.click();
             }
-        } catch (Exception ignored) {
-            // onboarding уже пройден или не отображается
+        } catch (NoSuchElementException ignored) {
+            // onboarding уже пройден
         }
 
         return this;
     }
 
+
     @Step("Открыть поиск Wikipedia")
     public WikipediaScreen openSearch() {
         WebElement search = wait.until(
                 ExpectedConditions.elementToBeClickable(
-                        AppiumBy.accessibilityId("Search Wikipedia")
+                        searchButton
                 )
         );
 
@@ -55,46 +70,44 @@ public class WikipediaScreen {
         return this;
     }
 
+
     @Step("Проверить открытие экрана поиска")
     public WikipediaScreen checkSearchOpened() {
-        WebElement searchInput = wait.until(
+        WebElement input = wait.until(
                 ExpectedConditions.visibilityOfElementLocated(
-                        AppiumBy.id(
-                                "org.wikipedia.alpha:id/search_src_text"
-                        )
+                        searchInput
                 )
         );
 
         assertTrue(
-                searchInput.isDisplayed(),
+                input.isDisplayed(),
                 "Поле поиска должно отображаться"
         );
 
         return this;
     }
 
+
     @Step("Выполнить поиск: {text}")
     public WikipediaScreen searchFor(String text) {
-        WebElement searchInput = wait.until(
+        WebElement input = wait.until(
                 ExpectedConditions.elementToBeClickable(
-                        AppiumBy.id(
-                                "org.wikipedia.alpha:id/search_src_text"
-                        )
+                        searchInput
                 )
         );
 
-        searchInput.sendKeys(text);
+        input.clear();
+        input.sendKeys(text);
 
         return this;
     }
+
 
     @Step("Проверить наличие результатов поиска")
     public WikipediaScreen checkSearchResults() {
         List<WebElement> results = wait.until(
                 ExpectedConditions.presenceOfAllElementsLocatedBy(
-                        AppiumBy.id(
-                                "org.wikipedia.alpha:id/page_list_item_title"
-                        )
+                        searchResultTitles
                 )
         );
 
@@ -106,13 +119,12 @@ public class WikipediaScreen {
         return this;
     }
 
+
     @Step("Открыть первую статью из результатов поиска")
     public WikipediaScreen openFirstSearchResult() {
         List<WebElement> results = wait.until(
                 ExpectedConditions.presenceOfAllElementsLocatedBy(
-                        AppiumBy.id(
-                                "org.wikipedia.alpha:id/page_list_item_title"
-                        )
+                        searchResultTitles
                 )
         );
 
@@ -121,10 +133,11 @@ public class WikipediaScreen {
         return this;
     }
 
+
     @Step("Проверить, что статья открылась")
     public WikipediaScreen checkArticleOpened() {
-        boolean articleOpened = wait.until(driver -> {
-            String source = driver.getPageSource();
+        boolean articleOpened = wait.until(webDriver -> {
+            String source = webDriver.getPageSource();
 
             return source.contains("Save")
                     || source.contains("Language")
