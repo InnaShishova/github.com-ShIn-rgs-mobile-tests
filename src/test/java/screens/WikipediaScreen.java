@@ -25,14 +25,18 @@ public class WikipediaScreen {
 
     @Step("Пропустить onboarding, если он отображается")
     public WikipediaScreen skipOnboardingIfVisible() {
-        List<WebElement> skipButtons = driver.findElements(
-                AppiumBy.id(
-                        "org.wikipedia.alpha:id/fragment_onboarding_skip_button"
-                )
-        );
+        try {
+            WebElement skipButton = driver.findElement(
+                    AppiumBy.id(
+                            "org.wikipedia.alpha:id/fragment_onboarding_skip_button"
+                    )
+            );
 
-        if (!skipButtons.isEmpty()) {
-            skipButtons.get(0).click();
+            if (skipButton.isDisplayed()) {
+                skipButton.click();
+            }
+        } catch (Exception ignored) {
+            // onboarding уже пройден или не отображается
         }
 
         return this;
