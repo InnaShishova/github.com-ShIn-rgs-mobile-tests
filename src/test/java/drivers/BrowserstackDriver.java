@@ -2,7 +2,6 @@ package drivers;
 
 import config.MobileConfig;
 import io.appium.java_client.android.AndroidDriver;
-import io.appium.java_client.android.options.UiAutomator2Options;
 import org.aeonbits.owner.ConfigFactory;
 import org.openqa.selenium.MutableCapabilities;
 
@@ -17,8 +16,12 @@ public class BrowserstackDriver {
             ConfigFactory.create(MobileConfig.class);
 
     public static AndroidDriver createDriver() {
-        String username = System.getenv("BROWSERSTACK_USERNAME");
-        String accessKey = System.getenv("BROWSERSTACK_ACCESS_KEY");
+
+        String username =
+                System.getenv("BROWSERSTACK_USERNAME");
+
+        String accessKey =
+                System.getenv("BROWSERSTACK_ACCESS_KEY");
 
         if (username == null || username.isBlank()) {
             throw new IllegalStateException(
@@ -32,24 +35,31 @@ public class BrowserstackDriver {
             );
         }
 
-        UiAutomator2Options options = new UiAutomator2Options();
+        MutableCapabilities capabilities =
+                new MutableCapabilities();
 
-        // =========================
-        // Appium capabilities
-        // =========================
-        options.setPlatformName("Android");
-        options.setDeviceName(config.device());
-        options.setPlatformVersion(config.osVersion());
-        options.setAutomationName("UiAutomator2");
-        options.setApp(config.app());
+        Map<String, Object> bstackOptions =
+                new HashMap<>();
 
-        // =========================
-        // BrowserStack capabilities
-        // =========================
-        Map<String, Object> bstackOptions = new HashMap<>();
+        bstackOptions.put(
+                "userName",
+                username
+        );
 
-        bstackOptions.put("userName", username);
-        bstackOptions.put("accessKey", accessKey);
+        bstackOptions.put(
+                "accessKey",
+                accessKey
+        );
+
+        bstackOptions.put(
+                "deviceName",
+                config.device()
+        );
+
+        bstackOptions.put(
+                "osVersion",
+                config.osVersion()
+        );
 
         bstackOptions.put(
                 "projectName",
@@ -66,9 +76,24 @@ public class BrowserstackDriver {
                 "Wikipedia Android Test"
         );
 
-        options.setCapability(
+        capabilities.setCapability(
                 "bstack:options",
                 bstackOptions
+        );
+
+        capabilities.setCapability(
+                "platformName",
+                "Android"
+        );
+
+        capabilities.setCapability(
+                "appium:app",
+                config.app()
+        );
+
+        capabilities.setCapability(
+                "appium:automationName",
+                "UiAutomator2"
         );
 
         try {
@@ -76,7 +101,7 @@ public class BrowserstackDriver {
                     new URL(
                             "https://hub.browserstack.com/wd/hub"
                     ),
-                    options
+                    capabilities
             );
         } catch (MalformedURLException e) {
             throw new RuntimeException(
