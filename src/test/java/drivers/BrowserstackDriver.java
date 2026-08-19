@@ -52,16 +52,6 @@ public class BrowserstackDriver {
         );
 
         bstackOptions.put(
-                "deviceName",
-                config.device()
-        );
-
-        bstackOptions.put(
-                "osVersion",
-                config.osVersion()
-        );
-
-        bstackOptions.put(
                 "projectName",
                 "Mobile Diploma"
         );
@@ -76,24 +66,41 @@ public class BrowserstackDriver {
                 "Wikipedia Android Test"
         );
 
+        /*
+         * BrowserStack device selection.
+         * Оставляем здесь, потому что такая схема
+         * у нас уже успешно создавала Pixel 7 / Android 13.
+         */
+        bstackOptions.put(
+                "deviceName",
+                config.device()
+        );
+
+        bstackOptions.put(
+                "osVersion",
+                config.osVersion()
+        );
+
         capabilities.setCapability(
                 "bstack:options",
                 bstackOptions
         );
 
+        // Стандартная W3C capability
         capabilities.setCapability(
                 "platformName",
                 "Android"
         );
 
-        capabilities.setCapability(
-                "appium:app",
-                config.app()
-        );
-
+        // Appium W3C capabilities
         capabilities.setCapability(
                 "appium:automationName",
                 "UiAutomator2"
+        );
+
+        capabilities.setCapability(
+                "appium:app",
+                config.app()
         );
 
         try {
