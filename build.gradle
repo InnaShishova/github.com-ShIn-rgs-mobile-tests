@@ -9,6 +9,7 @@ repositories {
 
 def allureVersion = '2.35.3'
 def appiumVersion = '9.5.0'
+def seleniumVersion = '4.34.0'
 def ownerVersion = '1.0.12'
 
 dependencies {
@@ -19,6 +20,10 @@ dependencies {
 
     // Appium
     testImplementation "io.appium:java-client:$appiumVersion"
+
+    // Selenium
+    // Версия зафиксирована для совместимости с Appium Java Client 9.5.0
+    testImplementation "org.seleniumhq.selenium:selenium-java:$seleniumVersion"
 
     // Owner
     testImplementation "org.aeonbits.owner:owner:$ownerVersion"
