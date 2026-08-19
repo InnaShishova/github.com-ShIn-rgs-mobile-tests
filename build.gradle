@@ -30,7 +30,6 @@ dependencies {
 
 test {
     useJUnitPlatform()
-
     systemProperties(System.getProperties())
 }
 
@@ -54,4 +53,12 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test).configureEach {
     systemProperty 'file.encoding', 'UTF-8'
+
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+        showExceptions true
+        showCauses true
+        showStackTraces true
+    }
 }
