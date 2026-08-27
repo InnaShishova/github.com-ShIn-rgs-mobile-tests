@@ -1,23 +1,29 @@
 # Mobile UI Automation Project
 
-Проект автоматизации мобильного тестирования Android-приложения Wikipedia.
+Проект автоматизации мобильного тестирования Android-приложения **Wikipedia**.
 
-Автотесты реализованы на Java с использованием Appium и JUnit 5.  
-Удалённый запуск мобильных тестов выполняется на реальных устройствах BrowserStack.  
-Для CI используется Jenkins, результаты тестирования формируются в Allure Report.
+Автотесты реализованы на Java с использованием **Appium** и **JUnit 5**.  
+Проект поддерживает локальный и удалённый запуск мобильных тестов. Удалённое выполнение осуществляется на реальных Android-устройствах в **BrowserStack App Automate**.
+
+Для CI используется **Jenkins**, результаты выполнения тестов формируются в **Allure Report**.
+
+---
 
 ## Technology Stack
 
 - Java 17
 - JUnit 5
 - Appium
-- BrowserStack
+- Selenium
+- BrowserStack App Automate
 - Owner
 - Allure Report
 - Gradle
 - Jenkins
 - Git
 - GitHub
+
+---
 
 ## Implemented Tests
 
@@ -27,40 +33,107 @@
 2. Поиск статьи в Wikipedia
 3. Открытие статьи из результатов поиска
 
-Тесты запускаются на Android-устройстве в BrowserStack.
+Тесты используют Page Object подход: взаимодействие с мобильным интерфейсом вынесено в класс `WikipediaScreen`.
+
+---
 
 ## Project Structure
 
 ```text
-src/test
-├── java
-│   ├── config
-│   │   └── MobileConfig.java
-│   ├── drivers
-│   │   └── BrowserstackDriver.java
-│   ├── screens
-│   │   └── WikipediaScreen.java
-│   ├── tests
-│   │   └── WikipediaTests.java
-│   └── utils
-│       └── Attach.java
+rgs-mobile-tests
+├── images
+│   ├── allure-report.png
+│   ├── browserstack-build.png
+│   ├── browserstack-session.png
+│   └── mobile-test.mp4
 │
-└── resources
-    └── config
-        └── browserstack.properties
+├── src
+│   └── test
+│       ├── java
+│       │   ├── config
+│       │   │   ├── LocalMobileConfig.java
+│       │   │   ├── MobileConfig.java
+│       │   │   ├── MobileConfigReader.java
+│       │   │   └── RemoteMobileConfig.java
+│       │   │
+│       │   ├── drivers
+│       │   │   ├── BrowserstackDriver.java
+│       │   │   └── LocalMobileDriver.java
+│       │   │
+│       │   ├── screens
+│       │   │   └── WikipediaScreen.java
+│       │   │
+│       │   ├── tests
+│       │   │   ├── TestBase.java
+│       │   │   └── WikipediaTests.java
+│       │   │
+│       │   └── utils
+│       │       └── Attach.java
+│       │
+│       └── resources
+│           └── config
+│               ├── browserstack.properties
+│               └── local.properties
+│
+├── .gitignore
+├── build.gradle
+├── gradlew
+└── gradlew.bat
 ```
+
+---
+
+## Configuration
+
+Для работы с конфигурацией используется библиотека **Owner**.
+
+Конфигурация разделена на локальный и удалённый запуск:
+
+- `MobileConfig` — базовый интерфейс конфигурации;
+- `LocalMobileConfig` — параметры локального запуска;
+- `RemoteMobileConfig` — параметры BrowserStack;
+- `MobileConfigReader` — выбор необходимой конфигурации.
+
+Режим запуска определяется системным параметром:
+
+```text
+env
+```
+
+Удалённый запуск:
+
+```bash
+./gradlew clean test -Denv=remote
+```
+
+Локальный запуск:
+
+```bash
+./gradlew clean test -Denv=local
+```
+
+---
 
 ## BrowserStack
 
-Мобильные тесты выполняются удалённо с использованием BrowserStack App Automate.
+Удалённые мобильные тесты выполняются с использованием **BrowserStack App Automate**.
 
-Основные параметры устройства задаются в:
+В текущей конфигурации тесты запускаются на:
+
+```text
+Device: Google Pixel 7
+OS: Android 13.0
+Platform: Android
+Automation: UiAutomator2
+```
+
+Параметры удалённого устройства находятся в:
 
 ```text
 src/test/resources/config/browserstack.properties
 ```
 
-Пример конфигурации:
+Пример:
 
 ```properties
 device=Google Pixel 7
@@ -68,104 +141,395 @@ osVersion=13.0
 app=bs://...
 ```
 
-Для авторизации используются переменные окружения:
+Для подключения к BrowserStack используются переменные окружения:
 
 ```text
 BROWSERSTACK_USERNAME
 BROWSERSTACK_ACCESS_KEY
 ```
 
-Секретные значения не хранятся в исходном коде проекта.
+Секретные данные не хранятся непосредственно в исходном коде проекта.
 
-При запуске в Jenkins приложение предварительно загружается в BrowserStack, после чего полученный `app_url` передаётся тестам через переменную:
+---
+
+## BrowserStack App Upload
+
+При запуске через Jenkins APK приложения автоматически загружается в BrowserStack перед выполнением тестов.
+
+Jenkins отправляет приложение через BrowserStack API и получает актуальный:
+
+```text
+app_url
+```
+
+Полученное значение передаётся тестам через переменную окружения:
 
 ```text
 BROWSERSTACK_APP_URL
 ```
 
+В `BrowserstackDriver` сначала проверяется эта переменная.
+
+Если она отсутствует, используется значение `app` из:
+
+```text
+browserstack.properties
+```
+
+Таким образом, локальный remote-запуск может использовать заранее загруженное приложение, а Jenkins — динамически загружать актуальный APK перед выполнением тестов.
+
+---
+
+## BrowserStack Test Execution
+
+Мобильные UI-тесты успешно выполняются удалённо на Android-устройстве в BrowserStack.
+
+В одной сборке запускаются три отдельные Appium-сессии.
+
+![BrowserStack build](images/browserstack-build.png)
+
+### BrowserStack Session
+
+BrowserStack предоставляет подробную информацию о каждой Appium-сессии:
+
+- устройство;
+- версию Android;
+- продолжительность выполнения;
+- video recording;
+- Appium commands;
+- logs;
+- capabilities.
+
+Пример выполнения теста на **Google Pixel 7 / Android 13**:
+
+![BrowserStack test session](images/browserstack-session.png)
+
+---
+
+## Test Execution Video
+
+BrowserStack автоматически записывает выполнение мобильных тестов.
+
+Запись одной из тестовых сессий сохранена в репозитории:
+
+[▶ Посмотреть видео выполнения мобильного теста](images/mobile-test.mp4)
+
+---
+
 ## Local Test Run
 
-Для локального запуска необходимо задать переменные окружения BrowserStack:
+Проект также поддерживает локальный запуск через Appium.
+
+Для локального режима используется:
+
+```text
+LocalMobileDriver
+```
+
+и конфигурация:
+
+```text
+src/test/resources/config/local.properties
+```
+
+Для запуска тестов в локальном режиме:
+
+```bash
+./gradlew clean test -Denv=local
+```
+
+Для Windows PowerShell:
+
+```powershell
+.\gradlew clean test -Denv=local
+```
+
+Для локального запуска необходимо предварительно запустить Appium и подготовить Android-эмулятор или подключённое Android-устройство.
+
+---
+
+## Remote Test Run
+
+Для удалённого запуска необходимо задать BrowserStack credentials.
+
+### Windows PowerShell
+
+```powershell
+$env:BROWSERSTACK_USERNAME="your_username"
+$env:BROWSERSTACK_ACCESS_KEY="your_access_key"
+```
+
+Проверить наличие переменных можно командами:
+
+```powershell
+if ($env:BROWSERSTACK_USERNAME) { "USERNAME SET" } else { "USERNAME NOT SET" }
+
+if ($env:BROWSERSTACK_ACCESS_KEY) { "ACCESS KEY SET" } else { "ACCESS KEY NOT SET" }
+```
+
+После этого:
+
+```powershell
+.\gradlew clean test -Denv=remote
+```
+
+При успешном выполнении:
+
+```text
+BUILD SUCCESSFUL
+```
+
+---
+
+## Jenkins CI
+
+Проект интегрирован с **Jenkins**.
+
+CI-процесс включает следующие этапы:
+
+1. Jenkins получает исходный код проекта из GitHub.
+2. BrowserStack credentials загружаются из Jenkins Credentials.
+3. Jenkins загружает APK Wikipedia в BrowserStack.
+4. BrowserStack возвращает актуальный `app_url`.
+5. `app_url` передаётся тестам через `BROWSERSTACK_APP_URL`.
+6. Jenkins запускает Gradle-тесты.
+7. Appium создаёт удалённые сессии BrowserStack.
+8. Выполняются три мобильных UI-теста.
+9. После выполнения формируется Allure Report.
+
+BrowserStack credentials хранятся в Jenkins как секретные значения и передаются в:
 
 ```text
 BROWSERSTACK_USERNAME
 BROWSERSTACK_ACCESS_KEY
 ```
 
-После этого тесты можно запустить командой:
-
-```bash
-./gradlew clean test
-```
-
-Для Windows PowerShell:
-
-```powershell
-.\gradlew clean test
-```
-
-## Jenkins CI
-
-Проект интегрирован с Jenkins.
-
-При запуске сборки Jenkins:
-
-1. получает исходный код проекта из GitHub;
-2. использует BrowserStack credentials из Jenkins Credentials;
-3. загружает APK в BrowserStack;
-4. получает актуальный `app_url`;
-5. запускает мобильные тесты через Gradle;
-6. формирует Allure Report.
-
-Успешная CI-сборка выполняет все 3 мобильных теста в BrowserStack.
+---
 
 ## Allure Report
 
-Для формирования отчётов используется Allure.
+Для формирования отчётов используется **Allure Report**.
 
-В отчёте отображаются:
+В отчёте доступны:
 
 - результаты выполнения тестов;
+- тестовые suites;
 - шаги тестов;
 - Owner;
 - Severity;
-- тег `mobile`;
+- feature `Mobile`;
 - Screenshot;
-- Page Source.
+- Page Source;
+- история запусков.
 
-Allure Report автоматически формируется после выполнения тестов в Jenkins.
+После выполнения тестов Jenkins автоматически формирует Allure Report.
 
-## Test Results
+### Test Results
 
-На текущей конфигурации:
+В успешном CI-запуске:
 
 ```text
-3 tests
+3 test cases
 3 passed
 100% successful
 ```
 
-Тесты успешно выполняются локально и через Jenkins на BrowserStack.
+![Allure Report](images/allure-report.png)
+
+---
 
 ## Allure Attachments
 
-После выполнения теста в Allure автоматически добавляются:
+После выполнения каждого теста в Allure добавляются дополнительные материалы для анализа.
 
-- Screenshot — скриншот состояния приложения;
-- Page Source — XML-структура текущего экрана.
+### Screenshot
 
-Это позволяет анализировать состояние приложения после выполнения теста.
+Скриншот состояния мобильного приложения после выполнения теста.
 
-## Run
+### Page Source
 
-Запуск всех тестов:
+XML-структура текущего экрана Android-приложения.
 
-```bash
-./gradlew clean test
+Эти attachments помогают анализировать состояние приложения и диагностировать ошибки при падении UI-тестов.
+
+---
+
+## Test Architecture
+
+Основная структура тестового фреймворка разделена на несколько слоёв.
+
+### Tests
+
+```text
+WikipediaTests
 ```
 
-Проверка компиляции тестового проекта:
+Содержит тестовые сценарии и проверки.
+
+### Screens
+
+```text
+WikipediaScreen
+```
+
+Содержит локаторы и методы взаимодействия с UI Wikipedia.
+
+### Drivers
+
+```text
+BrowserstackDriver
+LocalMobileDriver
+```
+
+Отвечают за создание Appium Driver для удалённого и локального запуска.
+
+### Configuration
+
+```text
+MobileConfig
+LocalMobileConfig
+RemoteMobileConfig
+MobileConfigReader
+```
+
+Отвечает за параметры окружения и выбор режима выполнения.
+
+### Utils
+
+```text
+Attach
+```
+
+Отвечает за добавление диагностических материалов в Allure Report.
+
+---
+
+## Run Tests
+
+### Проверка компиляции
 
 ```bash
 ./gradlew clean testClasses
 ```
+
+Windows:
+
+```powershell
+.\gradlew clean testClasses
+```
+
+### Remote BrowserStack
+
+```bash
+./gradlew clean test -Denv=remote
+```
+
+Windows:
+
+```powershell
+.\gradlew clean test -Denv=remote
+```
+
+### Local Appium
+
+```bash
+./gradlew clean test -Denv=local
+```
+
+Windows:
+
+```powershell
+.\gradlew clean test -Denv=local
+```
+
+---
+
+## Test Results
+
+Проект успешно выполняет полный набор мобильных UI-тестов:
+
+```text
+Tests: 3
+Passed: 3
+Success rate: 100%
+```
+
+Тесты выполняются в BrowserStack на **Google Pixel 7 / Android 13**, результаты публикуются в Jenkins и отображаются в Allure Report.
+
+---
+
+## CI / Test Flow
+
+```text
+GitHub
+   │
+   ▼
+Jenkins
+   │
+   ├── BrowserStack Credentials
+   │
+   ├── Upload Wikipedia APK
+   │
+   ▼
+BrowserStack App Automate
+   │
+   ├── Google Pixel 7
+   ├── Android 13
+   └── Appium / UiAutomator2
+   │
+   ▼
+Mobile UI Tests
+   │
+   ├── Open Search
+   ├── Search Article
+   └── Open Article
+   │
+   ▼
+Allure Results
+   │
+   ▼
+Jenkins Allure Report
+```
+
+---
+
+## Security
+
+Секретные данные BrowserStack не хранятся в исходном коде.
+
+Для авторизации используются:
+
+```text
+BROWSERSTACK_USERNAME
+BROWSERSTACK_ACCESS_KEY
+```
+
+При локальном запуске они передаются через переменные окружения.
+
+В Jenkins credentials хранятся в **Jenkins Credentials** и подставляются в environment variables во время выполнения job.
+
+Access Key не должен добавляться в:
+
+- Java-код;
+- `.properties` файлы;
+- README;
+- Git-репозиторий.
+
+---
+
+## Summary
+
+Проект демонстрирует полный процесс автоматизации мобильного UI-тестирования:
+
+- разработку Appium UI-тестов;
+- Page Object подход;
+- работу с Android;
+- локальный и удалённый запуск;
+- управление конфигурацией через Owner;
+- выполнение тестов на BrowserStack;
+- автоматическую загрузку APK;
+- хранение credentials вне исходного кода;
+- CI-запуск через Jenkins;
+- формирование Allure Report;
+- добавление Screenshot и Page Source;
+- запись видео выполнения мобильных тестов.
