@@ -45,4 +45,4 @@ bin/
 ### Secrets ###
 .env
 *.env
-local.properties
+/local.properties

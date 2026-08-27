@@ -1,8 +1,8 @@
 package drivers;
 
-import config.MobileConfig;
+import config.MobileConfigReader;
+import config.RemoteMobileConfig;
 import io.appium.java_client.android.AndroidDriver;
-import org.aeonbits.owner.ConfigFactory;
 import org.openqa.selenium.MutableCapabilities;
 
 import java.net.MalformedURLException;
@@ -12,8 +12,8 @@ import java.util.Map;
 
 public class BrowserstackDriver {
 
-    private static final MobileConfig config =
-            ConfigFactory.create(MobileConfig.class);
+    private static final RemoteMobileConfig config =
+            MobileConfigReader.getRemoteConfig();
 
     public static AndroidDriver createDriver() {
 
@@ -35,16 +35,6 @@ public class BrowserstackDriver {
             );
         }
 
-        /*
-         * В Jenkins приложение будет загружаться в BrowserStack
-         * перед запуском тестов.
-         *
-         * Jenkins передаст полученный bs://... через
-         * переменную BROWSERSTACK_APP_URL.
-         *
-         * При локальном запуске этой переменной нет,
-         * поэтому используется app из browserstack.properties.
-         */
         String appUrl =
                 System.getenv("BROWSERSTACK_APP_URL");
 
@@ -121,9 +111,7 @@ public class BrowserstackDriver {
 
         try {
             return new AndroidDriver(
-                    new URL(
-                            "https://hub.browserstack.com/wd/hub"
-                    ),
+                    new URL(config.remoteUrl()),
                     capabilities
             );
         } catch (MalformedURLException e) {
