@@ -353,6 +353,13 @@ XML-структура текущего экрана Android-приложени�
 
 ---
 
+## 🔗 Jenkins & Allure
+
+Результаты автоматизированного запуска мобильных тестов доступны по ссылкам:
+
+- [Jenkins Job — Mobile Autotests](https://jenkins.qa.guru/job/insh_rgs_mobile_tests/)
+- [Allure Report — Mobile Autotests](https://jenkins.qa.guru/job/insh_rgs_mobile_tests/14/allure/)
+
 ## Test Architecture
 
 Основная структура тестового фреймворка разделена на несколько слоёв.
